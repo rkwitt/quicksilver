@@ -70,7 +70,7 @@ def check_args(args):
 		print('Number of GPUs must be positive!')
 		sys.exit(1)
 
-	# number of GPU check (positive integers)
+	# geodesic shooting step check (positive integers)
 	if (args.shoot_steps < 0):
 		print('Shooting steps (--shoot-steps) is negative. Using model default step.')
 #enddef
