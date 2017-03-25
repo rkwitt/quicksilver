@@ -61,10 +61,30 @@ def readHDF5(filename):
 	f.close()
 	return data
 
+#convert the image or momentum to prediction space
+def convert_to_predict_space(image):
+	if (len(image.shape) == 3): #image
+		output = np.transpose(image, [2, 1, 0])
+	elif (len(image.shape) == 4): # momentum
+		output = np.transpose(image, [3, 2, 1, 0])
+	else :
+		print('does not support 2D yet!')
+		sys.exit(1)
+	return output;
+#enddef
+
+def convert_to_registration_space(image):
+	return convert_to_predict_space(image);
+#enddef
+
+
 # predict the momentum given a moving and target image
 def predict_momentum(moving, target, input_batch, batch_size, patch_size, net, step_size=14):
-    moving.cuda();
-    target.cuda();
+    moving = convert_to_predict_space(moving);
+    target = convert_to_predict_space(target);
+
+    moving = torch.from_numpy(moving).cuda();
+    target = torch.from_numpy(target).cuda();
     data_size = moving.size();
     flat_idx = calculatePatchIdx3D(1, patch_size*torch.ones(3), data_size, step_size*torch.ones(3));
     flat_idx_select = torch.zeros(flat_idx.size());
@@ -105,9 +125,9 @@ def predict_momentum(moving, target, input_batch, batch_size, patch_size, net, s
 
     #remove 0 weight areas
     momentum_weight += (momentum_weight == 0).float()
+    momentum_predict = momentum_predict.div(momentum_weight).cpu().numpy()
 
-    return momentum_predict.div(momentum_weight).cpu();
-
+    return convert_to_registration_space(momentum_predict)
 #enddef
 
 
