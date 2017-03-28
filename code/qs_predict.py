@@ -1,6 +1,6 @@
 # add lddmm shooting code into path
 import sys
-sys.path.append('./vectormomentum/code/Python');
+sys.path.append('./vectormomentum/Code/Python');
 from subprocess import call
 import argparse
 import os.path
