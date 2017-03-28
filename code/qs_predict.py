@@ -1,7 +1,7 @@
 # add lddmm shooting code into path
 import sys
-sys.path.append('./vectormomentum');
-
+sys.path.append('./vectormomentum/code/Python');
+from subprocess import call
 import argparse
 import os.path
 
@@ -30,24 +30,25 @@ parser = argparse.ArgumentParser(description='Deformation predicting given set o
 
 requiredNamed = parser.add_argument_group('required named arguments')
 
-requiredNamed.add_argument('--moving-image', nargs='+', required=True, metavar=('m1', 'm2, m3...'), 
+requiredNamed.add_argument('--moving-image', nargs='+', required=True, metavar=('m1', 'm2, m3...'),
 						   help='List of moving images, seperated by space.')
-requiredNamed.add_argument('--target-image', nargs='+', required=True, metavar=('t1', 't2, t3...'), 
+requiredNamed.add_argument('--target-image', nargs='+', required=True, metavar=('t1', 't2, t3...'),
 						   help='List of target images, seperated by space.')
-requiredNamed.add_argument('--output-prefix', nargs='+', required=True, metavar=('o1', 'o2, o3...'), 
-						   help='List of registration output prefixes for every moving/target image pair, seperated by space')
+requiredNamed.add_argument('--output-prefix', nargs='+', required=True, metavar=('o1', 'o2, o3...'),
+						   help='List of registration output prefixes for every moving/target image pair, seperated by space. Preferred to be a directory (e.g. /some_path/output_dir/)')
 
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for prediction network (default: 64)')
 parser.add_argument('--n-GPU', type=int, default=1, metavar='N',
-                    help='number of GPUs used for prediction. For maximum efficiency please set the batch size divisible by the number of GPUs.')
+                    help='number of GPUs used for prediction (default: 1). For maximum efficiency please set the batch size divisible by the number of GPUs.')
 parser.add_argument('--use-correction', action='store_true', default=False,
                     help='Apply correction network after prediction network. Slower computation time but with potential better registration accuracy.')
 parser.add_argument('--use-CPU-for-shooting', action='store_true', default=False,
                     help='Use CPU for geodesic shooting. Slow, but saves GPU memory.')
 parser.add_argument('--shoot-steps', type=int, default=0, metavar='N',
                     help='time steps for geodesic shooting. Ignore this option to use the default step size used by the registration model.')
-
+parser.add_argument('--affine-align', action='store_true', default=False,
+                    help='Perform affine registration to align moving and target images to ICBM152 atlas space. Require niftireg.')
 
 args = parser.parse_args()
 
@@ -89,12 +90,18 @@ def create_net(args, network_config):
 	return net;
 #enddef
 
+def preprocess_image(image_pyca):
+    image_np = common.AsNPCopy(image_pyca)
+    nan_mask = np.isnan(image_np)
+    image_np[nan_mask] = 0
+    image_np /= np.amax(image_np)
+    return image_np
+
 
 def write_result(result, output_prefix):
-	common.Mkdir_p(os.path.dirname(output_prefix))
 	common.SaveITKImage(result['I1'], output_prefix+"I1.mhd")
 	common.SaveITKField(result['phiinv'], output_prefix+"phiinv.mhd")
-
+#enddef
 
 #perform deformation prediction
 def predict_image(args):
@@ -120,12 +127,39 @@ def predict_image(args):
     	correction_net = None;
     # start prediction
     for i in range(0, len(args.moving_image)):
-    	moving_image = common.LoadITKImage(args.moving_image[i], mType)
-    	target_image = common.LoadITKImage(args.target_image[i], mType)
-    	moving_image_np = common.AsNPCopy(moving_image)
-    	target_image_np = common.AsNPCopy(target_image)
-        moving_image_np /= np.amax(moving_image_np)
-        target_image_np /= np.amax(target_image_np)
+        common.Mkdir_p(os.path.dirname(args.output_prefix[i]))
+        if (args.affine_align):
+            # Perform affine registration to both moving and target image to the ICBM152 atlas space.
+            # Registration is done using Niftireg.        
+            call(["reg_aladin", 
+                  "-noSym", "-speeeeed", "-ref", "icbm152.nii" ,
+                  "-flo", args.moving_image[i], 
+                  "-res", args.output_prefix[i]+"moving_affine.nii",
+                  "-aff", args.output_prefix[i]+'moving_affine_transform.txt'])
+
+            call(["reg_aladin", 
+                  "-noSym", "-speeeeed" ,"-ref", "icbm152.nii" ,
+                  "-flo", args.target_image[i], 
+                  "-res", args.output_prefix[i]+"target_affine.nii",
+                  "-aff", args.output_prefix[i]+'target_affine_transform.txt'])
+
+            moving_image = common.LoadITKImage(args.output_prefix[i]+"moving_affine.nii", mType)
+            target_image = common.LoadITKImage(args.output_prefix[i]+"target_affine.nii", mType)
+        else:
+            moving_image = common.LoadITKImage(args.moving_image[i], mType)
+            target_image = common.LoadITKImage(args.target_image[i], mType)
+    	#preprocessing of the image
+        moving_image_np = preprocess_image(moving_image);
+        target_image_np = preprocess_image(target_image);
+
+        grid = moving_image.grid()
+        #moving_image = ca.Image3D(grid, mType)
+        #target_image = ca.Image3D(grid, mType)
+        moving_image = common.ImFromNPArr(moving_image_np, mType)
+        target_image = common.ImFromNPArr(target_image_np, mType)
+        moving_image.setGrid(grid)
+        target_image.setGrid(grid)
+
     	m0 = util.predict_momentum(moving_image_np, target_image_np, input_batch, batch_size, patch_size, prediction_net);
 
     	#convert to registration space and perform registration
@@ -134,7 +168,6 @@ def predict_image(args):
     	if (args.use_correction):
     		#perform correction
             target_inv_np = common.AsNPCopy(registration_result['I1_inv'])
-            target_inv_np /= np.amax(target_inv_np)
             m0_correct = util.predict_momentum(moving_image_np, target_inv_np, input_batch, batch_size, patch_size, correction_net);
             m0 += m0_correct;
             m0_reg = common.FieldFromNPArr(m0, mType);
