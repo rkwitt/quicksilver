@@ -1,6 +1,5 @@
 # quicksilver
 Code and data for paper "Quicksilver: Fast Predictive Image Registration -- a Deep Learning Approach"
-Predictive Image Registration
 
 ## Disclaimer 
 **This software is published for academic and non-commercial use only.**
