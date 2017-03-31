@@ -5,11 +5,14 @@ Code and data for paper "Quicksilver: Fast Predictive Image Registration - a Dee
 **This software is published for academic and non-commercial use only.**
 
 ## Setup
-This code is based or PyTorch and PyCA. It is tested on Ubuntu 14.04 LTS with Python 2.7.
+This code is based or PyTorch and PyCA. It has been tested on Ubuntu 14.04/16.04 LTS with Python 2.7 (using CUDA 8.0 with one 
+Nvidia TitanX).
 
 Dependencies:
 * [PyTorch](http://pytorch.org/)  
-* [PyCA](https://bitbucket.org/scicompanat/pyca). For our code we use a specific version of PyCA, so please use the following command to download the code:
+* [PyCA](https://bitbucket.org/scicompanat/pyca). 
+
+For our code we use a *specific* version of PyCA, so please use the following command to download the code:
 ```
 git clone git@bitbucket.org:scicompanat/pyca.git
 cd ./pyca
@@ -20,8 +23,19 @@ CUDA backend:
 * [CUDA](https://developer.nvidia.com/cuda-downloads)
 
 Optional:
-* [Niftyreg](https://sourceforge.net/projects/niftyreg/). This is used for optional affine alignment to the ICBM152 atlas before performing deformable registration.
+* [NiftyReg](https://sourceforge.net/projects/niftyreg/). This is used for optional affine alignment to the ICBM152 atlas before performing deformable registration.
 
+### Recommended setup
+
+We recommend using Anaconda 4.3.0, as this cleanly separates the PyTorch installation (and all required libraries) from your
+system libraries. We exemplify suchn an installation below:
+
+```
+mkdir /scratch
+cd /scratch
+wget https://repo.continuum.io/archive/Anaconda2-4.3.1-Linux-x86_64.sh
+bash Anaconda2-4.3.1-Linux-x86_64.sh
+```
 
 ## Usage
 ### Quick start
