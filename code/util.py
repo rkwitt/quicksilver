@@ -9,17 +9,40 @@ def calculateIdx1D(length, patch_length, step):
 		one_dim_pos = torch.cat((one_dim_pos, torch.ones(1, 1) * (length-patch_length)))
 	return one_dim_pos;
 
-#given a flattened idx, return the position in the 3D image space
+
 def idx2pos(idx, image_size):
+	"""
+	Given a flattened idx, return the position in the 3D image space.
+
+	Args:
+
+		idx (int): 					Index into flattened 3D volume
+		image_size(list of 3 int): 	Size of 3D volume
+
+	"""
+	assert(len(image_size)==3)
+
 	pos_x = idx / (image_size[1] * image_size[2]);
 	idx_yz = idx % (image_size[1] * image_size[2]);
 	pos_y = idx_yz / image_size[2];
 	pos_z = idx_yz % image_size[2];
 	return torch.LongTensor([pos_x, pos_y, pos_z]);
 
-#given a position in the 3D image space, return a flattened idx
+
 def pos2idx(pos, image_size):
+	"""
+	Given a position in the 3D image space, return a flattened idx.
+
+	Args:
+
+		pos (list of 3 int):		Position in 3D volume
+		image_size (list of 3 int):	Size of 3D volume
+	"""
+	assert(len(pos)==3)
+	assert(len(image_size)==3)
+
 	return (pos[0] * image_size[1]*image_size[2]) + (pos[1] * image_size[2]) + pos[2];
+
 
 #given a flatterned idx for a 4D data (n_images * 3D image), return the position in the 4D space
 def idx2pos_4D(idx, image_size):
@@ -27,6 +50,7 @@ def idx2pos_4D(idx, image_size):
 	single_image_idx = idx % (image_size[0] * image_size[1] * image_size[2])
 	single_image_pos = idx2pos(single_image_idx, image_size)
 	return torch.cat((image_slice * torch.ones(1).long(), single_image_pos))
+
 
 # calculate the idx of the patches for 3D dataset (n_images * 3D image)
 def calculatePatchIdx3D(num_image, patch_size, image_size, step_size):
@@ -61,6 +85,7 @@ def readHDF5(filename):
 	f.close()
 	return data
 
+
 #convert the image or momentum to prediction space
 def convert_to_predict_space(image):
 	if (len(image.shape) == 3): #image
@@ -72,6 +97,7 @@ def convert_to_predict_space(image):
 		sys.exit(1)
 	return output;
 #enddef
+
 
 def convert_to_registration_space(image):
 	return convert_to_predict_space(image);

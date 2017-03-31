@@ -1,18 +1,19 @@
-# add lddmm shooting code into path
+# add LDDMM shooting code into path
 import sys
 sys.path.append('./vectormomentum/Code/Python');
+
 from subprocess import call
 import argparse
 import os.path
 
-#add deep learning related libraries
+#Add deep learning related libraries
 from collections import Counter
 import torch
 import prediction_network
 import util
 import numpy as np
 
-#add LDDMM registration related libraries
+#Add LDDMM registration related libraries
 # pyca modules
 import PyCA.Core as ca
 import PyCA.Common as common
@@ -25,6 +26,7 @@ import math
 
 import registration_methods
 
+
 #parse command line input
 parser = argparse.ArgumentParser(description='Deformation predicting given set of moving and target images.')
 
@@ -36,7 +38,6 @@ requiredNamed.add_argument('--target-image', nargs='+', required=True, metavar=(
 						   help='List of target images, seperated by space.')
 requiredNamed.add_argument('--output-prefix', nargs='+', required=True, metavar=('o1', 'o2, o3...'),
 						   help='List of registration output prefixes for every moving/target image pair, seperated by space. Preferred to be a directory (e.g. /some_path/output_dir/)')
-
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for prediction network (default: 64)')
 parser.add_argument('--n-GPU', type=int, default=1, metavar='N',
@@ -90,6 +91,7 @@ def create_net(args, network_config):
 	return net;
 #enddef
 
+
 def preprocess_image(image_pyca):
     image_np = common.AsNPCopy(image_pyca)
     nan_mask = np.isnan(image_np)
@@ -102,6 +104,7 @@ def write_result(result, output_prefix):
 	common.SaveITKImage(result['I1'], output_prefix+"I1.mhd")
 	common.SaveITKField(result['phiinv'], output_prefix+"phiinv.mhd")
 #enddef
+
 
 #perform deformation prediction
 def predict_image(args):
