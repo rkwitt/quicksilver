@@ -1,5 +1,5 @@
 # quicksilver
-This repository contains code and data for the following paper:
+This repository contains code and data for the following paper [[arXiv]](https://128.84.21.199/abs/1703.10908):
 
 ```
 @misc{YangKwittNiethammer17a,
@@ -8,6 +8,7 @@ This repository contains code and data for the following paper:
     year         = {2017},
     howpublished = {arXiv:1703.10908}}
 ```
+
 
 ## Disclaimer
 **This software is published for academic and non-commercial use only.**
