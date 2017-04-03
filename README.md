@@ -1,10 +1,12 @@
 # quicksilver
-This repository contains code and data for paper:
+This repository contains code and data for the following paper:
 
 ```
-Quicksilver: Fast Predictive Image Registration - a Deep Learning Approach"
-X. Yang, R. Kwitt and M. Niethammer
-2017
+@misc{YangKwittNiethammer17a,
+    title        = {Quicksilver: Fast Predictive Image Registration - a Deep Learning Approach},
+    author       = {X. Yang and R. Kwitt and M. Niethammer},
+    year         = {2017},
+    howpublished = {arXiv:1703.10908}}
 ```
 
 ## Disclaimer
