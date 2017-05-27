@@ -4,7 +4,7 @@ This repository contains code and data for the following paper [[arXiv]](https:/
 ```
 @misc{YangKwittStynerNiethammer17a,
     title        = {Quicksilver: Fast Predictive Image Registration - a Deep Learning Approach},
-    author       = {X. Yang and R. Kwitt and and M. Styner and M. Niethammer},
+    author       = {X. Yang and R. Kwitt and M. Styner and M. Niethammer},
     year         = {2017},
     howpublished = {arXiv:1703.10908}}
 ```
