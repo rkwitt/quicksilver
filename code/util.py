@@ -6,7 +6,7 @@ from torch.autograd import Variable
 def calculateIdx1D(length, patch_length, step):
 	one_dim_pos = torch.range(0, length-patch_length, step)
 	if (length-patch_length) % step != 0:
-		one_dim_pos = torch.cat((one_dim_pos, torch.ones(1, 1) * (length-patch_length)))
+		one_dim_pos = torch.cat((one_dim_pos, torch.ones(1) * (length-patch_length)))
 	return one_dim_pos;
 
 
@@ -62,9 +62,9 @@ def calculatePatchIdx3D(num_image, patch_size, image_size, step_size):
 	for x_pos in range(0, pos_idx[0].size()[0]):
 		for y_pos in range(0, pos_idx[1].size()[0]):
 			for z_pos in range(0, pos_idx[2].size()[0]):
-				pos_3d[0] = pos_idx[0][x_pos][0]
-				pos_3d[1] = pos_idx[1][y_pos][0]
-				pos_3d[2] = pos_idx[2][z_pos][0]
+				pos_3d[0] = pos_idx[0][x_pos]
+				pos_3d[1] = pos_idx[1][y_pos]
+				pos_3d[2] = pos_idx[2][z_pos]
 				pos_idx_flat[flat_idx] = pos2idx(pos_3d, image_size)
 				flat_idx = flat_idx+1;
 	
