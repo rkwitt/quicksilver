@@ -21,7 +21,7 @@ This code is based or PyTorch and PyCA. It has been tested on Ubuntu 14.04/16.04
 * [PyCA](https://bitbucket.org/scicompanat/pyca).
 * [CUDA](https://developer.nvidia.com/cuda-downloads)
 * [NiftyReg](https://sourceforge.net/projects/niftyreg/)
-* [scikit-image](scikit-image.org)
+* [scikit-image](http://scikit-image.org)
 
 *Remark*: NiftyReg is used for optional affine pre-alignment to the ICBM152 atlas before performing deformable registration. scikit-image is used for histogram equalization of the input images. Note: if you use Anaconda as the development platform, you can install scikit-image as suggested in [the Anaconda page](https://anaconda.org/anaconda/scikit-image).
 
