@@ -4,7 +4,7 @@ import h5py
 from torch.autograd import Variable
 
 def calculateIdx1D(length, patch_length, step):
-	one_dim_pos = torch.range(0, length-patch_length, step)
+	one_dim_pos = torch.arange(0, length-patch_length+1, step)
 	if (length-patch_length) % step != 0:
 		one_dim_pos = torch.cat((one_dim_pos, torch.ones(1) * (length-patch_length)))
 	return one_dim_pos;

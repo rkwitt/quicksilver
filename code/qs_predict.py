@@ -12,6 +12,7 @@ import torch
 import prediction_network
 import util
 import numpy as np
+from skimage import exposure
 
 #Add LDDMM registration related libraries
 # pyca modules
@@ -50,6 +51,8 @@ parser.add_argument('--shoot-steps', type=int, default=0, metavar='N',
                     help='time steps for geodesic shooting. Ignore this option to use the default step size used by the registration model.')
 parser.add_argument('--affine-align', action='store_true', default=False,
                     help='Perform affine registration to align moving and target images to ICBM152 atlas space. Require niftireg.')
+parser.add_argument('--histeq', action='store_true', default=False,
+                    help='Perform histogram equalization to the moving and target images.')
 parser.add_argument('--atlas', default="../data/atlas/icbm152.nii", 
                     help="Atlas to use for (affine) pre-registration")
 
@@ -94,11 +97,16 @@ def create_net(args, network_config):
 #enddef
 
 
-def preprocess_image(image_pyca):
+def preprocess_image(image_pyca, histeq):
     image_np = common.AsNPCopy(image_pyca)
     nan_mask = np.isnan(image_np)
     image_np[nan_mask] = 0
     image_np /= np.amax(image_np)
+
+    # perform histogram equalization if needed
+    if histeq:
+        image_np[image_np != 0] = exposure.equalize_hist(image_np[image_np != 0])
+
     return image_np
 
 
@@ -156,31 +164,32 @@ def predict_image(args):
             target_image = common.LoadITKImage(args.target_image[i], mType)
 
         #preprocessing of the image
-        moving_image_np = preprocess_image(moving_image);
-        target_image_np = preprocess_image(target_image);
+        moving_image_np = preprocess_image(moving_image, args.histeq);
+        target_image_np = preprocess_image(target_image, args.histeq);
 
         grid = moving_image.grid()
-        #moving_image = ca.Image3D(grid, mType)
-        #target_image = ca.Image3D(grid, mType)
-        moving_image = common.ImFromNPArr(moving_image_np, mType)
-        target_image = common.ImFromNPArr(target_image_np, mType)
-        moving_image.setGrid(grid)
         target_image.setGrid(grid)
+        moving_image_processed = common.ImFromNPArr(moving_image_np, mType)
+        target_image_processed = common.ImFromNPArr(target_image_np, mType)
+        moving_image_processed.setGrid(grid)
+        target_image_processed.setGrid(grid)
 
         # run actual prediction
         m0 = util.predict_momentum(moving_image_np, target_image_np, input_batch, batch_size, patch_size, prediction_net);
 
         #convert to registration space and perform registration
         m0_reg = common.FieldFromNPArr(m0, mType);
-        registration_result = registration_methods.geodesic_shooting(moving_image, target_image, m0_reg, args.shoot_steps, mType, predict_network_config)
         
         #perform correction
         if (args.use_correction):
+            registration_result = registration_methods.geodesic_shooting(moving_image_processed, target_image_processed, m0_reg, args.shoot_steps, mType, predict_network_config)
             target_inv_np = common.AsNPCopy(registration_result['I1_inv'])
             m0_correct = util.predict_momentum(moving_image_np, target_inv_np, input_batch, batch_size, patch_size, correction_net);
             m0 += m0_correct;
             m0_reg = common.FieldFromNPArr(m0, mType);
-            registration_result = registration_methods.geodesic_shooting(moving_image, target_image, m0_reg, args.shoot_steps, mType, predict_network_config)
+        
+        registration_result = registration_methods.geodesic_shooting(moving_image, target_image, m0_reg, args.shoot_steps, mType, predict_network_config)
+
         #endif
 
         write_result(registration_result, args.output_prefix[i]);
