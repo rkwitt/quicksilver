@@ -11,7 +11,7 @@ This repository contains code and data for the following paper [[arXiv]](https:/
 
 
 ## Disclaimer
-**This software is published for academic and non-commercial use only (GPL-3.0)**
+**This software is published for academic and non-commercial use only (Apache-2.0)**
 
 ## Setup
 This code is based or PyTorch and PyCA. It has been tested on Ubuntu 14.04/16.04 LTS with Python 2.7 (using Nvidia TitanX GPUs, with CUDA 8.0).
