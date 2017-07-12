@@ -56,7 +56,10 @@ parser.add_argument('--histeq', action='store_true', default=False,
                     help='Perform histogram equalization to the moving and target images.')
 parser.add_argument('--atlas', default="../data/atlas/icbm152.nii",
                     help="Atlas to use for (affine) pre-registration")
-
+parser.add_argument('--prediction-parameter', default='../../network_configs/OASIS_predict.pth.tar',
+                    help="network parameters for the prediction network")
+parser.add_argument('--correction-parameter', default='../../network_configs/OASIS_correct.pth.tar',
+                    help="network parameters for the correction network")
 args = parser.parse_args()
 
 
@@ -125,7 +128,7 @@ def predict_image(args):
         mType = ca.MEM_DEVICE
 
     # load the prediction network
-    predict_network_config = torch.load('../../network_configs/OASIS_predict.pth.tar')
+    predict_network_config = torch.load(args.prediction_parameter)
     prediction_net = create_net(args, predict_network_config);
 
     batch_size = args.batch_size
@@ -134,7 +137,7 @@ def predict_image(args):
 
     # use correction network if required
     if args.use_correction:
-        correction_network_config = torch.load('../../network_configs/OASIS_correct.pth.tar');
+        correction_network_config = torch.load(args.correction_parameter);
         correction_net = create_net(args, correction_network_config);
     else:
         correction_net = None;
@@ -176,7 +179,7 @@ def predict_image(args):
         moving_image.setGrid(grid)
         target_image.setGrid(grid)
 
-        # Yang: 
+        # Indicating whether we are using the old parameter files for the Neuroimage experiments (use .t7 files from matlab .h5 format)
         predict_transform_space = False
         if 'matlab_t7' in predict_network_config:
             predict_transform_space = True

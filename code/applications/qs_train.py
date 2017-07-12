@@ -10,6 +10,7 @@ import gc
 #Add deep learning related libraries
 from collections import Counter
 import torch
+from torch.utils.serialization import load_lua
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
@@ -33,11 +34,11 @@ parser = argparse.ArgumentParser(description='Deformation predicting given set o
 ##required parameters
 requiredNamed = parser.add_argument_group('required named arguments')
 requiredNamed.add_argument('--moving-image-dataset', nargs='+', required=True, metavar=('m1', 'm2, m3...'),
-	                       help='List of moving images datasets stored in .pth format. File names are seperated by space.')
+	                       help='List of moving images datasets stored in .pth.tar format (or .t7 format for the old experiments in the Neuroimage paper). File names are seperated by space.')
 requiredNamed.add_argument('--target-image-dataset', nargs='+', required=True, metavar=('t1', 't2, t3...'),
-	                       help='List of target images datasets stored in .pth format. File names are seperated by space.')
+	                       help='List of target images datasets stored in .pth.tar format (or .t7 format for the old experiments in the Neuroimage paper). File names are seperated by space.')
 requiredNamed.add_argument('--deformation-parameter', nargs='+', required=True, metavar=('o1', 'o2, o3...'),
-	                       help='List of target deformation parameter files to predict to, stored in .pth format. File names are seperated by space.')
+	                       help='List of target deformation parameter files to predict to, stored in .pth.tar format (or .t7 format for the old experiments in the Neuroimage paper). File names are seperated by space.')
 requiredNamed.add_argument('--deformation-setting-file', required=True, metavar=('yaml_file'),
 	                       help='yaml file that contains LDDMM registration settings.')
 requiredNamed.add_argument('--output-name', required=True, metavar=('file_name'),
@@ -109,9 +110,17 @@ def create_net(args):
 #enddef
 
 def train_cur_data(cur_epoch, datapart, moving_file, target_file, parameter, output_name, net, criterion, optimizer, registration_spec, args):
-	moving_appear_trainset = torch.load(moving_file).float()
-	target_appear_trainset = torch.load(target_file).float()
-	train_m0 = torch.load(parameter).float()
+	old_experiments = False
+	if moving_file[-3:] == '.t7' :
+		old_experiments = True
+		#only for old data used in the Neuroimage paper. Do not use .t7 format for new data and new experiments.
+		moving_appear_trainset = load_lua(moving_file).float()
+		target_appear_trainset = load_lua(target_file).float()
+		train_m0 = load_lua(parameter).float()
+	else :
+		moving_appear_trainset = torch.load(moving_file).float()
+		target_appear_trainset = torch.load(target_file).float()
+		train_m0 = torch.load(parameter).float()
 
 	input_batch = torch.zeros(args.batch_size, 2, args.patch_size, args.patch_size, args.patch_size).cuda()
 	output_batch = torch.zeros(args.batch_size, 3, args.patch_size, args.patch_size, args.patch_size).cuda()
@@ -157,13 +166,19 @@ def train_cur_data(cur_epoch, datapart, moving_file, target_file, parameter, out
 				cur_state_dict = net.module.state_dict()
 			else:
 				cur_state_dict = net.state_dict()			
+			
 			modal_name = output_name
-			torch.save({
+			
+			model_info = {
             	'patch_size' : args.patch_size,
             	'network_feature' : args.features,
             	'state_dict': cur_state_dict,
             	'deformation_params': registration_spec
-        	}, modal_name )	
+        	}
+        	if old_experiments :
+        		model_info['matlab_t7'] = True
+
+			torch.save(model_info, modal_name )	
 #enddef	
 
 def train_network(args, registration_spec):

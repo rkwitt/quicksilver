@@ -38,7 +38,7 @@ def geodesic_shooting_diffOp(moving, target, m0, steps, mType, config):
 	It_inv = ca.Image3D(grid, mType)
 
 	if (steps <= 0):
-		time_steps = config['deformation_params']['time_steps'];
+		time_steps = config['deformation_params']['timeSteps'];
 	else:
 		time_steps = steps;
 
