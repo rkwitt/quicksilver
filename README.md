@@ -104,3 +104,7 @@ python qs_predict.py \
     --output-prefix /tmp/
 ```
 This will generate two files: `/tmp/I1.mhd`, `/tmp/I1.raw` (i.e., `m1.nii` aligned to `m2.nii` in the coordinate system of `m2.nii`).
+
+
+### Training new network
+To be added
