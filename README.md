@@ -80,7 +80,7 @@ Four (pre-aligned) example images (from CUMC) can be downloaded [here](https://d
 
 ### Quick start
 ```bash
-cd /scratch/quicksilver/code
+cd /scratch/quicksilver/code/applications
 python qs_predict.py --moving-image moving_1.nii moving_2.nii moving_3.nii ...
                      --target-image target_1.nii target_2.nii target_3.nii ...
 		             --output-prefix prefix_1 prefix_2 prefix_3 ...
@@ -97,7 +97,7 @@ additional affine alignment needs to be done.
 ```bash
 cd /scratch2/quicksilver
 tar xvfz CUMC_examples.tar.gz
-cd code
+cd code/applications
 python qs_predict.py \
     --moving-image ../CUMC_examples/m1.nii \
     --target-image ../CUMC_examples/m2.nii \
