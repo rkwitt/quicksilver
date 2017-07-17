@@ -153,10 +153,19 @@ def predict_momentum(moving, target, input_batch, batch_size, patch_size, net, c
     #remove 0 weight areas
     momentum_weight += (momentum_weight == 0).float()
     momentum_predict = momentum_predict.div(momentum_weight).cpu().numpy()
-    
+    momentum_predict_prediction_space = momentum_predict
+
     if change_space:
     	momentum_predict = convert_to_registration_space(momentum_predict)
-    return momentum_predict
+    else:
+    	momentum_predict = np.transpose(momentum_predict, [1, 2, 3, 0])    
+    prediction_result = {
+    	'prediction_space': momentum_predict_prediction_space,
+    	'image_space': momentum_predict
+    }
+    return prediction_result
+
+    
 #enddef
 
 

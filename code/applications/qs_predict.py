@@ -30,7 +30,7 @@ import registration_methods
 
 
 #parse command line input
-parser = argparse.ArgumentParser(description='Deformation predicting given set of moving and target images.')
+parser = argparse.ArgumentParser(description='Deformation prediction given set of moving and target images.')
 
 requiredNamed = parser.add_argument_group('required named arguments')
 
@@ -96,7 +96,8 @@ def create_net(args, network_config):
         net = torch.nn.DataParallel(net_single, device_ids=device_ids).cuda()
     else:
         net = net_single
-
+    
+    net.train()
     return net;
 #enddef
 
@@ -184,8 +185,8 @@ def predict_image(args):
         if 'matlab_t7' in predict_network_config:
             predict_transform_space = True
         # run actual prediction
-        m0 = util.predict_momentum(moving_image_np, target_image_np, input_batch, batch_size, patch_size, prediction_net, predict_transform_space);
-
+        prediction_result = util.predict_momentum(moving_image_np, target_image_np, input_batch, batch_size, patch_size, prediction_net, predict_transform_space);
+        m0 = prediction_result['image_space']
         #convert to registration space and perform registration
         m0_reg = common.FieldFromNPArr(m0, mType);
 
@@ -197,7 +198,8 @@ def predict_image(args):
             correct_transform_space = False
             if 'matlab_t7' in correction_network_config:
                 correct_transform_space = True
-            m0_correct = util.predict_momentum(moving_image_np, target_inv_np, input_batch, batch_size, patch_size, correction_net, correct_transform_space);
+            correction_result = util.predict_momentum(moving_image_np, target_inv_np, input_batch, batch_size, patch_size, correction_net, correct_transform_space);
+            m0_correct = correction_result['image_space']
             m0 += m0_correct;
             m0_reg = common.FieldFromNPArr(m0, mType);
 

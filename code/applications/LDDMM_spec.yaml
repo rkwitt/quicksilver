@@ -1,4 +1,0 @@
-diffOpParams: [0.01, 0.01, 0.001]
-integMethod: "RK4"
-timeSteps: 10
-NIterForInverse: 20
