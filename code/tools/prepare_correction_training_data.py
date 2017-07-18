@@ -25,7 +25,7 @@ import PyCA.Common as common
 import logging
 import copy
 import math
-
+import gc
 import registration_methods
 
 parser = argparse.ArgumentParser(description='Use trained prediction network to generate data for training the correction network')
@@ -93,42 +93,43 @@ def predict_dataset(args):
     patch_size = network_config['patch_size']
     input_batch = torch.zeros(batch_size, 2, patch_size, patch_size, patch_size).cuda()
     for datapart_idx in range(0, len(args.moving_image_dataset)):
-        moving_image = torch.load(args.moving_image_dataset[datapart_idx])
-        target_image = torch.load(args.target_image_dataset[datapart_idx])
-        optimization_momentum = torch.load(args.deformation_parameter[datapart_idx])
+        predict_each_datapart(args, net, network_config, input_batch, datapart_idx, batch_size, patch_size, predict_transform_space)
+        gc.collect()
+#enddef
 
-        #warped_target_image = torch.zeros(target_image.size())
-        #residual_momentum = torch.zeros(optimization_momentum.size())
+def predict_each_datapart(args, net, network_config, input_batch, datapart_idx, batch_size, patch_size, predict_transform_space):
+    moving_image = torch.load(args.moving_image_dataset[datapart_idx])
+    target_image = torch.load(args.target_image_dataset[datapart_idx])
+    optimization_momentum = torch.load(args.deformation_parameter[datapart_idx])
+    for slice_idx in range(0, moving_image.size()[0]):
+        print(slice_idx)
+        moving_slice = moving_image[slice_idx].numpy()
+        target_slice = target_image[slice_idx].numpy()
+        if predict_transform_space:
+            moving_slice = util.convert_to_registration_space(moving_slice)
+            target_slice = util.convert_to_registration_space(target_slice)
 
-        for slice_idx in range(0, moving_image.size()[0]):
-            print(slice_idx)
-            moving_slice = moving_image[slice_idx].numpy()
-            target_slice = target_image[slice_idx].numpy()
-            if predict_transform_space:
-                moving_slice = util.convert_to_registration_space(moving_slice)
-                target_slice = util.convert_to_registration_space(target_slice)
-
-            predicted_momentum = util.predict_momentum(moving_slice, target_slice, input_batch, batch_size, patch_size, net, predict_transform_space);
-            m0_reg = common.FieldFromNPArr(predicted_momentum['image_space'], ca.MEM_DEVICE);
+        predicted_momentum = util.predict_momentum(moving_slice, target_slice, input_batch, batch_size, patch_size, net, predict_transform_space);
+        m0_reg = common.FieldFromNPArr(predicted_momentum['image_space'], ca.MEM_DEVICE);
             
-            moving_image_ca = common.ImFromNPArr(moving_slice, ca.MEM_DEVICE)
-            target_image_ca = common.ImFromNPArr(target_slice, ca.MEM_DEVICE)
+        moving_image_ca = common.ImFromNPArr(moving_slice, ca.MEM_DEVICE)
+        target_image_ca = common.ImFromNPArr(target_slice, ca.MEM_DEVICE)
 
-            registration_result = registration_methods.geodesic_shooting(moving_image_ca, target_image_ca, m0_reg, args.shoot_steps, ca.MEM_DEVICE, network_config)
+        registration_result = registration_methods.geodesic_shooting(moving_image_ca, target_image_ca, m0_reg, args.shoot_steps, ca.MEM_DEVICE, network_config)
             
-            target_inv = common.AsNPCopy(registration_result['I1_inv'])
-            print(target_inv.shape)
-            if predict_transform_space:
-                target_inv = util.convert_to_predict_space(target_inv)
-            print(target_inv.shape)
-            target_inv = torch.from_numpy(target_inv)
+        target_inv = common.AsNPCopy(registration_result['I1_inv'])
+        print(target_inv.shape)
+        if predict_transform_space:
+            target_inv = util.convert_to_predict_space(target_inv)
+        print(target_inv.shape)
+        target_inv = torch.from_numpy(target_inv)
 
-            target_image[slice_idx] = target_inv
+        target_image[slice_idx] = target_inv
 
-            optimization_momentum[slice_idx] = optimization_momentum[slice_idx] - torch.from_numpy(predicted_momentum['prediction_space'])
+        optimization_momentum[slice_idx] = optimization_momentum[slice_idx] - torch.from_numpy(predicted_momentum['prediction_space'])
         
-        torch.save(target_image, args.warped_back_target_output[datapart_idx])
-        torch.save(optimization_momentum, args.momentum_residual[datapart_idx])
+    torch.save(target_image, args.warped_back_target_output[datapart_idx])
+    torch.save(optimization_momentum, args.momentum_residual[datapart_idx])
 
 if __name__ == '__main__':
     check_args(args)

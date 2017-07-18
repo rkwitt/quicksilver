@@ -1,0 +1,9 @@
+ObjectType = Image
+NDims = 3
+BinaryData = True
+BinaryDataByteOrderMSB = False
+Offset = 0 0 0
+ElementSpacing = 1 1 1
+DimSize = 75 75 75
+ElementType = MET_FLOAT
+ElementDataFile = cos.raw

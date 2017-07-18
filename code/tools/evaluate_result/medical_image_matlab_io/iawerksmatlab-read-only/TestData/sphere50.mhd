@@ -1,0 +1,9 @@
+ObjectType = Image
+NDims = 3
+BinaryData = True
+BinaryDataByteOrderMSB = False
+Offset = 0 0 0
+ElementSpacing = 1 1 1
+DimSize = 50 50 50
+ElementType = MET_FLOAT
+ElementDataFile = sphere50.raw
