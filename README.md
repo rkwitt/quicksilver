@@ -132,6 +132,7 @@ python ./create_pth.py --files momentum_4 momentum_5 momentum_6 --output momentu
 ```
 
 Make sure to make the moving images/target images/momentums have the same order in the .pth.tar files.
+
 4. Train the prediction network using `quicksilver/code/tools/qs_train.py`. An example will be
 ```
 cd quicksilver/code/tools
@@ -144,6 +145,7 @@ python qs_train.py \
 
 ```
 Here `LDDMM_spec.yaml` defines the setting for the LDDMM optimization algorithm. This information is stored in the network parameter file, and is used when using quicksilver to formulate LDDMM shooting.
+
 5. Create warp-back target image files and momentum difference (between LDDMM optimization and prediction network) files. This is for training the correction network. This operation is done using `quicksilver/code/tools/prepare_correction_training_data.py`. An example would be (suppose we have the training files as `moving_image_1.pth.tar`/`moving_image_2.pth.tar`, `target_image_dataset_1.pth.tar`/`target_image_dataset_2.pth.tar`, and `momentum_dataset_1.pth.tar`/`momentum_dataset_2.pth.tar`):
 ```
 cd quicksilver/code/tools
