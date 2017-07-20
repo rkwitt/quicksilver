@@ -151,9 +151,9 @@ python prepare_correction_training_data.py \
     --moving-image-dataset moving_image_dataset_1.pth.tar moving_image_dataset_2.pth.tar \
     --target-image-dataset target_image_dataset_1.pth.tar target_image_dataset_2.pth.tar \
     --deformation-parameter momentum_dataset_1.pth.tar momentum_dataset_2.pth.tar \
-	--network-parameter ./prediction_network_parameter.pth.tar \
-	--warped-back-target-output warped_target_dataset_1.pth.tar warped_target_dataset_1.pth.tar \
-	--momentum-residual momentum_diff_1.pth.tar momentum_diff_2.pth.tar
+    --network-parameter ./prediction_network_parameter.pth.tar \
+    --warped-back-target-output warped_target_dataset_1.pth.tar warped_target_dataset_1.pth.tar \
+    --momentum-residual momentum_diff_1.pth.tar momentum_diff_2.pth.tar
 ```
 6. Train the correction network. The procedure is the same as step 4, except (as in this example here) change `target_image_dataset_x.pth.tar` to `warped_target_dataset_x.pth.tar` and `momentum_dataset_1.pth.tar` to `momentum_diff_1.pth.tar`, and of course change the output file name.
 
