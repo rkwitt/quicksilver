@@ -105,6 +105,60 @@ python qs_predict.py \
 ```
 This will generate two files: `/tmp/I1.mhd`, `/tmp/I1.raw` (i.e., `m1.nii` aligned to `m2.nii` in the coordinate system of `m2.nii`).
 
+### Use the probablistic version of the network
+Use `quicksilver/code/applications/qs_predict_probablistic.py`. There are two main differences compared to qs_predict.py. First, there is an additional option `--samples` that lets you decide the number of times to sample the network (default is 50). The variance of the deformation is samed as 'phiinv_var.mhd'. Second, there are no correction network for the probabilistic network.
 
-### Training new network
-To be added
+### Training a new network from start to finish
+1. Do affine alignment and histogram equalization for the training images using `quicksilver/code/tools/preprocessing/affine_and_histogram_eq.py`. If using the default atlas (the MNI152 atlas as `quicksilver/data/atlas/icbm152.nii`), Make sure the training images are in the same coordinate system.
+2. Perform registrations on the training data using ```quicksilver/code/tools/LDDMM_optimization/CAvmMatching.py```
+3. Gather the moving images, target images and initial momentum from LDDMM optimization for training the network. This is done by using `quicksilver/code/tools/create_pth.py` to gather the images and momentums into .pth.tar files. For example:
+```
+cd quicksilver/code/tools/
+python ./create_pth.py --files moving_image_1 moving_image_2 moving_image_3 --output moving_image_all.pth.tar
+python ./create_pth.py --files target_image_1 target_image_2 target_image_3 --output target_image_all.pth.tar
+python ./create_pth.py --files momentum_1 momentum_2 momentum_3 --output momentum_all.pth.tar --momentum
+```
+You can seperated the images/momentums into several .pth.tar files to make each .pth.tar file size reasonable. For example:
+```
+# make training data part 1
+python ./create_pth.py --files moving_image_1 moving_image_2 moving_image_3 --output moving_image_dataset_1.pth.tar
+python ./create_pth.py --files target_image_1 target_image_2 target_image_3 --output target_image_dataset_1.pth.tar
+python ./create_pth.py --files momentum_1 momentum_2 momentum_3 --output momentum_dataset_1.pth.tar --momentum
+
+# make training data part 2
+python ./create_pth.py --files moving_image_4 moving_image_5 moving_image_6 --output moving_image_dataset_2.pth.tar
+python ./create_pth.py --files target_image_4 target_image_5 target_image_6 --output target_image_dataset_2.pth.tar
+python ./create_pth.py --files momentum_4 momentum_5 momentum_6 --output momentum_dataset_2.pth.tar --momentum
+```
+
+Make sure to make the moving images/target images/momentums have the same order in the .pth.tar files.
+4. Train the prediction network using `quicksilver/code/tools/qs_train.py`. An example will be
+```
+cd quicksilver/code/tools
+python qs_train.py \
+    --moving-image-dataset moving_image_dataset_1.pth.tar moving_image_dataset_2.pth.tar \
+    --target-image-dataset target_image_dataset_1.pth.tar target_image_dataset_2.pth.tar \
+    --deformation-parameter momentum_dataset_1.pth.tar momentum_dataset_2.pth.tar \
+    --deformation-setting-file ./LDDMM_spec.yaml	\
+    --output-name ./prediction_network_parameter.pth.tar
+
+```
+Here `LDDMM_spec.yaml` defines the setting for the LDDMM optimization algorithm. This information is stored in the network parameter file, and is used when using quicksilver to formulate LDDMM shooting.
+5. Create warp-back target image files and momentum difference (between LDDMM optimization and prediction network) files. This is for training the correction network. This operation is done using `quicksilver/code/tools/prepare_correction_training_data.py`. An example would be (suppose we have the training files as `moving_image_1.pth.tar`/`moving_image_2.pth.tar`, `target_image_dataset_1.pth.tar`/`target_image_dataset_2.pth.tar`, and `momentum_dataset_1.pth.tar`/`momentum_dataset_2.pth.tar`):
+```
+cd quicksilver/code/tools
+python prepare_correction_training_data.py \
+    --moving-image-dataset moving_image_dataset_1.pth.tar moving_image_dataset_2.pth.tar \
+    --target-image-dataset target_image_dataset_1.pth.tar target_image_dataset_2.pth.tar \
+    --deformation-parameter momentum_dataset_1.pth.tar momentum_dataset_2.pth.tar \
+	--network-parameter ./prediction_network_parameter.pth.tar \
+	--warped-back-target-output warped_target_dataset_1.pth.tar warped_target_dataset_1.pth.tar \
+	--momentum-residual momentum_diff_1.pth.tar momentum_diff_2.pth.tar
+```
+6. Train the correction network. The procedure is the same as step 4, except (as in this example here) change `target_image_dataset_x.pth.tar` to `warped_target_dataset_x.pth.tar` and `momentum_dataset_1.pth.tar` to `momentum_diff_1.pth.tar`, and of course change the output file name.
+
+
+### evaluate your result on the 4 test datasets
+1. Perform prediction on the four test datasets (CUMC12, LPBA40, MGH10, IBSR18) use qs_predict.py
+2. Calculate the label overlapping score for each test case using `calculate_CUMC_overlap.m`, `calculate_LPBA_overlap.m`, `calculate_IBSR_overlap.m`, `calculate_MGH_overlap.m` in the `quicksilver/code/tools/evaluate_result/` directory
+3. Plot the results and compared to the results in the Neuroimage paper by using `quicksilver/code/tools/evaluate_result/generate_label_overlapping_plot.m`
