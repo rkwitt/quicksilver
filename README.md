@@ -50,7 +50,7 @@ git checkout 9954dd5319efaa0ac5f58977e57acf004ad73ed7
 mkdir Build && cd Build
 ccmake ...
 ```
-Configure (according to your system settings) and compile PyCA.
+Configure (according to your system settings) and compile PyCA. Note that we also made a PyCA code clone in quicksilver/3rd_party_software, so you could build PyCA using that.
 
 **Final configuration**
 
@@ -229,7 +229,7 @@ python prepare_correction_training_data.py --moving-image-dataset \
                      /mydirectory/OASIS/OASIS_m0_4.pth.tar \
                      /mydirectory/OASIS/OASIS_m0_5.pth.tar \
                      --network-parameter /mydirectory/prediction_network.pth.tar \
-					 --warped-back-target-output \
+                     --warped-back-target-output \
                      /mydirectory/OASIS/OASIS_target_warpback_1.pth.tar \
                      /mydirectory/OASIS/OASIS_target_warpback_2.pth.tar \
                      /mydirectory/OASIS/OASIS_target_warpback_3.pth.tar \
