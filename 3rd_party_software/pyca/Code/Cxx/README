@@ -1,0 +1,119 @@
+Library Dirs:
+================================
+
+src/
+
+inc/
+
+Greedy/LDMM Algorithms
+================================
+
+Algorithms/
+
+Application / Module Testing
+================================
+
+test/
+
+Experimental Code:
+================================
+
+SparseDiffeo/
+
+cholesky/
+
+apps/
+
+Important definitions:
+================================
+
+exec mode:
+----------------
+ - EXEC_CPU / EXEC_GPU / EXEC_GPU_PARAM - inc/const/device.h
+   Note: EXEC_GPU_PARAM is used for execution where parameters are on the
+   GPU (instead of passed in from CPU)
+ - BackgroundStrategy - inc/const/device.h
+ - MemoryType (ie MEM_HOST, MEM_DEVICE, MEM_HOST_PINNED) - inc/types/mem.h
+ - MK_* Compile-time checks - inc/conditionMacro.h
+ - StreamT - inc/types/estream.h
+
+In main 'aw' namespace:
+================================
+
+memory operations - inc/types/mem.h
+----------------
+ - memAlloc
+ - memFree
+ - ArrayAllocator
+ - ArrayDeleter
+ - cpyArrayH2H, etc.
+ - memCopy
+ - cpyC2D, etc. (device constant/symbol functions)
+
+Major Classes / Namespaces:
+================================
+
+MemOpers - inc/math/memOpers.h
+----------------
+Operations on raw memory arrays:
+ - Copy
+ - SetMem
+ - SetLinear
+ - Math functions
+
+ImgOpers - inc/math/imgOpers.h
+----------------
+ - Copy (Image version)
+ - SetMem (Image version)
+ - Resample (Image version)
+ - Image/Image and Image/Constant math functions
+
+ImageFieldOpers - inc/math/ImageFieldOpers.h
+----------------
+ - Apply/ForwardApply(splat)
+ - Gradient
+ - Magnitude
+ - Image/Field math operations
+
+Field3DOpers - inc/math/Field3DOpers.h
+----------------
+Operations taking both V and H fields as arguments, or where type of
+field doesn't matter
+ - Copy (Field3D version)
+ - SetMem (Field3D version)
+ - Field3D math functions
+ - Field/Field composition functions
+ - Apply (deform field by field)
+ - jacobian
+ - Resample (resample a Field3D)
+
+HField3DOpers - inc/math/HField3DOpers.h
+----------------
+Operations taking h-fields as arguments
+ - setToIdentity
+ - toV
+ - applyH / applyU (deform an HField using a H or V field)
+ - inverseZerothOrder
+ - forwardApply
+
+VField3DOpers - inc/math/VField3DOpers.h
+----------------
+Operations taking v-fields as arguments
+ - setToZero
+ - toH
+ - applyH / applyU (deform a velocity field using H or V field)
+ - forwardApply
+ - Resample
+
+Reduce - inc/base/Reduce.h
+----------------
+Recude object operating on raw data arrays, requires instantiation of
+an object
+
+Reduction - inc/Reduction.h
+----------------
+Recude operations taking images or fields as arguments and that do not
+require explicitly instantiating a reduce object
+
+ThreadSingleton - inc/thread/ThreadSingleton.h
+----------------

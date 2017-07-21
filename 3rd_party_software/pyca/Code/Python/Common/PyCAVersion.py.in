@@ -1,0 +1,69 @@
+# `git describe` returns either the tag of the current revision
+# (e.g. `v0.01`) if the current revision is tagged, or the latest tag
+# and info about how many commits have occurred since the tag and the
+# current tag hash.  For example, `git describe` might return
+# `v0.00-79-gd689ccd`, which means v0.00 was the latest tag on this
+# branch, there have since been 79 commits, and the latest commit has
+# short hash d689ccd.  The `--dirty` tag append `-dirty` to the output
+# if there are local modifications which have not been committed
+
+# `git rev-parse [shorthash]` will return the full hash of a commit,
+# and `git rev-parse HEAD` will give the commit hash of HEAD, and
+# `rev-parse --abbrev-ref HEAD` returns the current branch name.
+
+import re
+
+_PYCA_VERSION = '${PYCA_VERSION}'
+_PYCA_COMMIT = '${PYCA_COMMIT}'
+_PYCA_BRANCH = '${PYCA_BRANCH}'
+
+
+def PyCAVersion():
+    """
+    Returns a string for the PyCA version, for example 'v0.01'.  This
+    is actually the output of git-describe --dirty for the current
+    revision -- if not a tagged commit, the string will describe the
+    last tag, number of commits since tag, and the short commit name,
+    as well
+    """
+    return _PYCA_VERSION
+
+
+def PyCAVersionMajor():
+    """
+    Returns the integer major PyCA version, for example 0 for version
+    'v0.00'
+    """
+    m = re.match('v(\d)\.(\d\d).*', _PYCA_VERSION)
+    if m:
+        return int(m.group(1))
+    else:
+        raise Exception('PyCA version (%s) could not '
+                        'be parsed for major version' % _PYCA_VERSION)
+
+
+def PyCAVersionMinor():
+    """
+    Returns the integer minor PyCA version, for example 1 for version
+    'v0.00'
+    """
+    m = re.match('v(\d)\.(\d\d).*', _PYCA_VERSION)
+    if m:
+        return int(m.group(2))
+    else:
+        raise Exception('PyCA version (%s) could not '
+                        'be parsed for minor version' % _PYCA_VERSION)
+
+    
+def PyCACommit():
+    """
+    Returns the commit hash for this PyCA version
+    """
+    return _PYCA_COMMIT
+
+
+def PyCABranch():
+    """
+    Returns the git branch for this PyCA version
+    """
+    return _PYCA_BRANCH

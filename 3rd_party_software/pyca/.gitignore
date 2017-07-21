@@ -1,0 +1,5 @@
+# emacs buffers
+*~
+# compiled python
+*.pyc
+Docs/html/

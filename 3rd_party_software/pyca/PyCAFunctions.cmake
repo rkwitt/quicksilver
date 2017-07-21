@@ -1,0 +1,13 @@
+#-----------------------------------------------------------------------------
+# function to add value to source_file_property list
+FUNCTION(ADD_TO_SOURCE_FILE_PROPERTY SOURCE_FILE SF_PROP APPEND_VAL)
+# add extra options to any existing flags
+GET_SOURCE_FILE_PROPERTY(CUR_PROP_VAL ${SOURCE_FILE} ${SF_PROP})
+IF(CUR_PROP_VAL)
+  SET(NEW_PROP_VAL "${CUR_PROP_VAL};${APPEND_VAL}")
+ELSE(CUR_PROP_VAL)
+  SET(NEW_PROP_VAL "${APPEND_VAL}")
+ENDIF(CUR_PROP_VAL)
+SET_SOURCE_FILES_PROPERTIES(${SOURCE_FILE} PROPERTIES ${SF_PROP} "${NEW_PROP_VAL}")
+ENDFUNCTION(ADD_TO_SOURCE_FILE_PROPERTY)
+
