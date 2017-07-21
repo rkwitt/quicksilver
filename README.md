@@ -164,3 +164,134 @@ python prepare_correction_training_data.py \
 1. Perform prediction on the four test datasets (CUMC12, LPBA40, MGH10, IBSR18) use qs_predict.py
 2. Calculate the label overlapping score for each test case using `calculate_CUMC_overlap.m`, `calculate_LPBA_overlap.m`, `calculate_IBSR_overlap.m`, `calculate_MGH_overlap.m` in the `quicksilver/code/tools/evaluate_result/` directory
 3. Plot the results and compared to the results in the Neuroimage paper by using `quicksilver/code/tools/evaluate_result/generate_label_overlapping_plot.m`
+
+### An example case to retrain the Quicksilver network:
+Below shows an example to train the Quicksilver network using the OASIS dataset. Suppose everything happens in /mydirectory/, and quicksilver is downloaded at /mydirectory/quicksilver/
+1. Download the OASIS dataset from TODO: add OASIS link here. Download the images into /mydirectory/OASIS/
+2. Perform LDDMM registration using the files in `/mydirectory/quicksilver/full_quicksilver_walkthrough/step2/`. Specifically, run the fullowing bash shell script
+```
+cd /mydirectory/quicksilver/code/tools/LDDMM_optimization
+
+for i in $(find /mydirectory/quicksilver/full_quicksilver_walkthrough/step2 -name 'deep_network*.yaml');
+do
+        python ./CAvmMatching.py $i;
+done
+```
+3. Gather all registration resuls into .pth.tar files.
+```
+cd /mydirectory/quicksilver/code/tools/
+bash /mydirectory/quicksilver/full_quicksilver_walkthrough/step3/gather_data.sh
+```
+4. Train the prediction network:
+```
+cd /mydirectory/quicksilver/code/tools/
+python ./qs_train.py --moving-image-dataset \
+                     /mydirectory/OASIS/OASIS_moving_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_5.pth.tar \
+                     --target-image-dataset \
+                     /mydirectory/OASIS/OASIS_target_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_5.pth.tar \
+                     --deformation-parameter \
+                     /mydirectory/OASIS/OASIS_m0_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_5.pth.tar \
+                     --deformation-setting-file ./LDDMM_spec.yaml \
+                     --output-name /mydirectory/prediction_network.pth.tar \
+                     --epochs 10
+```
+5. Create the data needed to train the correction network
+```
+cd /mydirectory/quicksilver/code/tools/
+python prepare_correction_training_data.py --moving-image-dataset \
+                     /mydirectory/OASIS/OASIS_moving_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_5.pth.tar \
+                     --target-image-dataset \
+                     /mydirectory/OASIS/OASIS_target_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_5.pth.tar \
+                     --deformation-parameter \
+                     /mydirectory/OASIS/OASIS_m0_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_5.pth.tar \
+                     --network-parameter /mydirectory/prediction_network.pth.tar \
+					 --warped-back-target-output \
+                     /mydirectory/OASIS/OASIS_target_warpback_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_warpback_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_warpback_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_warpback_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_warpback_5.pth.tar \
+                     --momentum-residual \
+                     /mydirectory/OASIS/OASIS_m0_diff_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_diff_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_diff_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_diff_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_diff_5.pth.tar
+```
+6. Train the correction network                     
+```
+cd /mydirectory/quicksilver/code/tools/
+python ./qs_train.py --moving-image-dataset \
+                     /mydirectory/OASIS/OASIS_moving_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_5.pth.tar \
+                     --target-image-dataset \
+                     /mydirectory/OASIS/OASIS_target_warpback_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_warpback_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_warpback_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_warpback_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_warpback_5.pth.tar \
+                     --deformation-parameter \
+                     /mydirectory/OASIS/OASIS_m0_diff_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_diff_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_diff_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_diff_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_diff_5.pth.tar \
+                     --deformation-setting-file ./LDDMM_spec.yaml \
+                     --output-name /mydirectory/correction_network.pth.tar \
+                     --epochs 10
+```
+
+If you want to train the probablistic version of the network, change the command in step 4 into
+```
+cd /mydirectory/quicksilver/code/tools/
+python ./qs_train.py --moving-image-dataset \
+                     /mydirectory/OASIS/OASIS_moving_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_moving_5.pth.tar \
+                     --target-image-dataset \
+                     /mydirectory/OASIS/OASIS_target_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_target_5.pth.tar \
+                     --deformation-parameter \
+                     /mydirectory/OASIS/OASIS_m0_1.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_2.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_3.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_4.pth.tar \
+                     /mydirectory/OASIS/OASIS_m0_5.pth.tar \
+                     --deformation-setting-file ./LDDMM_spec.yaml \
+                     --output-name /mydirectory/prediction_network.pth.tar \
+                     --epochs 10 \ 
+                     --use-dropout
+```
+and skip step 5 and 6.

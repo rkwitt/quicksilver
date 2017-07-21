@@ -1,0 +1,26 @@
+compute:
+    useMPI: False
+    hostFile: None
+    useCUDA: True
+    gpuID: 0
+    numProcesses: 10
+    interactive: True
+optim:
+    nTimeSteps: 10
+    Niter: 50
+    stepSize: 0.000004
+    NIterForInverse: 5
+    integMethod: RK4
+    method: FIXEDGD
+    maxPert: None
+study:
+    I1: /mydirectory/OASIS/266_adjust.nii
+    I0: /mydirectory/OASIS/233_adjust.nii
+io:
+    quiverEvery: 4
+    outputPrefix: /mydirectory/OASIS/result_233_266/
+    plotSlice: None
+    plotEvery: 10
+vectormomentum:
+    sigma: 0.2
+    diffOpParams: [0.01, 0.01, 0.001]

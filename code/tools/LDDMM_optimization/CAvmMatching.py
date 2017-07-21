@@ -1,8 +1,9 @@
 #!/usr/bin/python2
-
+import sys
+import os.path
+sys.path.append('../../vectormomentum/Code/Python');
 # configuration files related modules
 from Configs import Config, Optim, Compute, VMConfig
-import os.path
 
 # pyca modules
 import PyCA.Core as ca
@@ -18,7 +19,6 @@ import matplotlib.pyplot as plt
 import os, errno
 
 import logging
-import sys
 import copy
 import math
 import time
