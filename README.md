@@ -16,6 +16,10 @@ This repository contains code and data for the following paper [[arXiv]](https:/
 ## Setup
 This code is based or PyTorch and PyCA. It has been tested on Ubuntu 14.04/16.04 LTS with Python 2.7 (using Nvidia TitanX GPUs, with CUDA 8.0).
 
+## IMPORTANT
+
+The code is currently based on PyTorch 0.3. As some changes to the tensor interface were made in PyTorch 0.4 it currently does not run with PyTorch > 0.3. We will fix this in the near future. For now simply use PyTorch 0.3 or help us port the code :)
+
 **Dependencies**:
 * [PyTorch](http://pytorch.org/)
 * [PyCA](https://bitbucket.org/scicompanat/pyca).
