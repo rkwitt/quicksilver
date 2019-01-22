@@ -96,7 +96,7 @@ def create_net(args, network_config):
         net = torch.nn.DataParallel(net_single, device_ids=device_ids).cuda()
     else:
         net = net_single
-    
+
     net.train()
     return net;
 #enddef
@@ -122,7 +122,7 @@ def write_result(result, output_prefix):
 
 
 #perform deformation prediction
-def predict_image(args):
+def predict_image(args, moving_images, target_images, output_prefixes):
     if (args.use_CPU_for_shooting):
         mType = ca.MEM_HOST
     else:
@@ -144,29 +144,29 @@ def predict_image(args):
         correction_net = None;
 
     # start prediction
-    for i in range(0, len(args.moving_image)):
+    for i in range(0, len(moving_images)):
 
-        common.Mkdir_p(os.path.dirname(args.output_prefix[i]))
+        common.Mkdir_p(os.path.dirname(output_prefixes[i]))
         if (args.affine_align):
             # Perform affine registration to both moving and target image to the ICBM152 atlas space.
             # Registration is done using Niftireg.
             call(["reg_aladin",
                   "-noSym", "-speeeeed", "-ref", args.atlas ,
-                  "-flo", args.moving_image[i],
-                  "-res", args.output_prefix[i]+"moving_affine.nii",
-                  "-aff", args.output_prefix[i]+'moving_affine_transform.txt'])
+                  "-flo", moving_images[i],
+                  "-res", output_prefixes[i]+"moving_affine.nii",
+                  "-aff", output_prefixes[i]+'moving_affine_transform.txt'])
 
             call(["reg_aladin",
                   "-noSym", "-speeeeed" ,"-ref", args.atlas ,
-                  "-flo", args.target_image[i],
-                  "-res", args.output_prefix[i]+"target_affine.nii",
-                  "-aff", args.output_prefix[i]+'target_affine_transform.txt'])
+                  "-flo", target_images[i],
+                  "-res", output_prefixes[i]+"target_affine.nii",
+                  "-aff", output_prefixes[i]+'target_affine_transform.txt'])
 
-            moving_image = common.LoadITKImage(args.output_prefix[i]+"moving_affine.nii", mType)
-            target_image = common.LoadITKImage(args.output_prefix[i]+"target_affine.nii", mType)
+            moving_image = common.LoadITKImage(output_prefixes[i]+"moving_affine.nii", mType)
+            target_image = common.LoadITKImage(output_prefixes[i]+"target_affine.nii", mType)
         else:
-            moving_image = common.LoadITKImage(args.moving_image[i], mType)
-            target_image = common.LoadITKImage(args.target_image[i], mType)
+            moving_image = common.LoadITKImage(moving_images[i], mType)
+            target_image = common.LoadITKImage(target_images[i], mType)
 
         #preprocessing of the image
         moving_image_np = preprocess_image(moving_image, args.histeq);
@@ -207,11 +207,6 @@ def predict_image(args):
 
         #endif
 
-        write_result(registration_result, args.output_prefix[i]);
+        write_result(registration_result, output_prefixes[i]);
 #enddef
 
-
-
-if __name__ == '__main__':
-    check_args(args);
-    predict_image(args)

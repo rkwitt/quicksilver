@@ -58,7 +58,6 @@ The PyCA team
     if msg is not None:
         print "Thank you for helping PyCA development"
 
-        # save this information locally in _statfile
         with open(_statfile, 'w') as f:
             f.write(msg)
 

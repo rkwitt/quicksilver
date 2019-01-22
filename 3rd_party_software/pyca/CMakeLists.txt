@@ -411,7 +411,7 @@ IF(USE_CUDA)
 
     MARK_AS_ADVANCED(CUDA_ARCH_VERSION)
     SET(CUDA_ARCH_VERSION
-      "13"
+      "30"
       CACHE STRING
       "Cuda architecture version, ie -arch sm_??")
 
